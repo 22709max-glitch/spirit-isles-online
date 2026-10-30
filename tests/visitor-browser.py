@@ -1,0 +1,11 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import json
+r=Path(__file__).resolve().parents[1];errors=[];checks=[]
+with sync_playwright() as pw:
+ b=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required'])
+ a=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True);p=a.new_page();p.on('pageerror',lambda e:errors.append(str(e)));p.on('console',lambda m:errors.append(m.text) if 'ERROR' in m.text else None)
+ p.goto('http://127.0.0.1:8770/',wait_until='networkidle');p.get_by_role('button',name='直接開始遊玩',exact=True).wait_for(timeout=10000);assert p.get_by_role('button',name='登入／註冊',exact=True).is_disabled();checks.append('unconfigured accounts explicitly disabled while visitor play available')
+ p.get_by_role('button',name='直接開始遊玩',exact=True).tap();p.wait_for_function('window.spiritReady&&window.spiritMobileTree?.tree?.id',timeout=120000);assert p.evaluate('window.SPIRIT_SAVE_SCOPE')=='guest';p.get_by_role('button',name='選擇這位夥伴',exact=True).nth(1).tap();p.wait_for_timeout(800);p.evaluate('window.spiritAction(JSON.stringify({kind:"menu",name:"close"}))');p.wait_for_timeout(300);p.get_by_role('button',name='存檔',exact=True).tap();p.wait_for_timeout(900);raw=p.evaluate('localStorage.getItem("spirit-isles-save-v1:guest")');assert json.loads(raw)['profile']['party'];assert p.evaluate('localStorage.getItem("spirit-isles-save-v1")') is None;checks.append('actual game saves only to visitor namespace');p.screenshot(path=str(r/'validation/visitor-phone.png'))
+ c=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True);q=c.new_page();q.goto('http://127.0.0.1:8770/',wait_until='networkidle');assert q.evaluate('localStorage.getItem("spirit-isles-save-v1:guest")') is None;checks.append('another browser at same URL does not share player save');c.close()
+ assert not errors,errors;(r/'validation/visitor-browser.json').write_text(json.dumps({'checks':checks,'errors':errors,'phone_hardware_tested':False},ensure_ascii=False,indent=2));print('VISITOR_BROWSER_PASS',checks,flush=True);b.close()
