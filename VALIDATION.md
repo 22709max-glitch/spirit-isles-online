@@ -21,3 +21,5 @@
 執行：`python tests/mobile-layout-regression.py chromium`、`python tests/mobile-layout-regression.py webkit`、`python tests/mobile-flows.py`、`python tests/mobile-save-upgrade.py`。測試用的本機HTTP伺服器為8770；WebKit的本機執行路徑可依環境調整。
 
 另驗證接電線保留原生旋轉按鈕，挖掘保留完整6×6可操作格與座標標頭，沒有把棋盤當成物品清單分頁。
+
+v0.9.4發布後，已重新在公開HTTPS網址完成上述5項實際瀏覽器流程，並確認載入的是`game-mobile-v2.pck`。六項手機操作流程測試亦通過，涵蓋到站提示、倉庫交換、裝卸裝備、導航購物、旋轉電線與挖掘棋盤；無收集到的頁面錯誤。
